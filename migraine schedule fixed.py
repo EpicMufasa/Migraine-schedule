@@ -62,10 +62,15 @@ for d in cols:
 
 df = pd.DataFrame(data, index=pharmacists)
 
-# Editable grid
-edited = st.experimental_data_editor(df, use_container_width=True)
+# Editable grid (requires Streamlit >=1.21)
+try:
+    edited = st.data_editor(df, use_container_width=True)
+except AttributeError:
+    st.warning("Your Streamlit version does not support data_editor. Displaying read-only table.")
+    st.dataframe(df, use_container_width=True)
+    edited = df
 
-# Parse back into session_state.schedule
+# Parse back into session_state.schedule into session_state.schedule
 for name in edited.index:
     for date_str in edited.columns:
         val = edited.at[name, date_str]
