@@ -59,15 +59,33 @@ for name in st.session_state.pharmacists:
 
 # 6. Validation rules
 def validate_day(shifts):
-    # need earliest <=7:45, latest >=17:00, someone covering 12:00
-    opens = [s['start'] for s in shifts]
-    closes = [s['end'] for s in shifts]
-    covers_mid = any(s['start'] <= time(12,0) <= s['end'] for s in shifts)
-    ok_open = min(opens) <= time(7,45)
-    ok_close = max(closes) >= time(17,0)
+    """
+    Check that for a given day's shifts:
+      - There's an opener (earliest start ≤ 7:45 AM)
+      - There's a closer (latest end ≥ 5:00 PM)
+      - At least one shift covers noon (12:00 PM)
+    """
+    # Extract valid time entries
+    opens = []
+    closes = []
+    covers_mid = False
+    for s in shifts:
+        start = s.get('start')
+        end = s.get('end')
+        if isinstance(start, time) and isinstance(end, time):
+            opens.append(start)
+            closes.append(end)
+            if start <= time(12, 0) <= end:
+                covers_mid = True
+    # If no valid entries, fail
+    if not opens or not closes:
+        return False
+    # Check opener and closer
+    ok_open = min(opens) <= time(7, 45)
+    ok_close = max(closes) >= time(17, 0)
     return ok_open and ok_close and covers_mid
 
-# 7. Display daily status
+# 7. Display daily status Display daily status
 st.header("Coverage Status")
 status_cols = st.columns(len(dates))
 for i, date in enumerate(dates):
